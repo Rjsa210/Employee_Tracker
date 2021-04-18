@@ -56,9 +56,9 @@ const startPrgm = () => {
         case 'View employees':
           viewEmployee();
           break;
-        // case 'Update employee role': 
-        //   updateEmployee();
-        //   break;
+        case 'Update employee role':
+          updateEmployee();
+          break;
         default:
           quitPrgm();
           break;
@@ -91,63 +91,6 @@ const addDept = () => {
       );
     });
 }
-//add role //flawed code
-// const addRole = () => { 
-//   connection.query('SELECT * FROM department', (err, results) => {
-//     if (err) throw err;
-
-//     inquirer
-//       .prompt([
-//         {
-//           name: 'newRole',
-//           type: 'input',
-//           message: 'What is the name of the new role?'
-//         },
-//         {
-//           name: 'salary',
-//           type: 'input',
-//           message: 'what is the salary of the new role?'
-//         },
-//         {
-//           name: 'department_id',
-//           type: 'rawlist',
-//           choices: () => {
-//             const deptArray = [];
-//             results.forEach((department) => {
-//               deptArray.push(JSON.stringify(department));
-//               // deptArray.push(department);
-//             });
-//             return deptArray;
-//           },
-//           message: 'To what department does the new role belong?'
-//         },
-//       ])
-//       .then((answer) => {
-//         connection.query(
-//           'INSERT INTO role SET ?',
-//           {
-//             title: answer.newRole,
-//             salary: answer.salary,
-//             department_id: JSON.parse(answer.department_id).id,
-//             // department_id: () => {
-//             //   let string = JSON.stringify(answer.department_id);
-//             //   let parse = JSON.parse(string);
-//             //   return parse.id;
-//             // }
-//             // department_id: getDeptIdByName(answer.department_id)
-//           },
-//           (err) => {
-//             if (err) throw err;
-//             console.log(`${answer.newRole} added to roles at $${answer.salary} per year!`);
-//             pressAnyKey()
-//               .then(() => {
-//                 startPrgm();
-//               })
-//           }
-//         );
-//       });
-//   })
-// }
 
 const addRole = () => {
   connection.query('SELECT * FROM department', (err, results) => {
@@ -171,7 +114,7 @@ const addRole = () => {
           choices: () => {
             const deptArray = [];
             results.forEach(({ name, id }) => {
-              deptArray.push({name});
+              deptArray.push({ name: name, value: id });
               // deptArray.push(department);
             });
 
@@ -181,63 +124,77 @@ const addRole = () => {
         },
       ])
       .then((answer) => {
-        console.log({
-          title: answer.newRole,
-          salary: answer.salary,
-          department_id: getDeptIdByName(answer.department_id),
-        })
-        // getDeptIdByName(answer.department_id)
-        // connection.query(
-        //   'INSERT INTO role SET ?',
-        //   {
-        //     title: answer.newRole,
-        //     salary: answer.salary,
-        //     department_id: getDeptIdByName(answer.department_id),
-        //   },
-        //   (err) => {
-        //     if (err) throw err;
-        //     console.log(`${answer.newRole} added to roles at $${answer.salary} per year!`);
-        //     pressAnyKey()
-        //       .then(() => {
-        //         startPrgm();
-        //       })
-        //   }
-        // );
+        connection.query(
+          'INSERT INTO role SET ?',
+          {
+            title: answer.newRole,
+            salary: answer.salary,
+            department_id: answer.department_id,
+          },
+          (err) => {
+            if (err) throw err;
+            console.log(`${answer.newRole} added to roles at $${answer.salary} per year!`);
+            pressAnyKey()
+              .then(() => {
+                startPrgm();
+              })
+          }
+        );
       });
   })
 }
 //add employee
 const addEmployee = () => {
-  inquirer
-    .prompt([
-      {
-        name: 'newEmpFN',
-        type: 'input',
-        message: 'What is the new employee\'s first name?'
-      },
-      {
-        name: 'newEmpLN',
-        type: 'input',
-        message: 'What is the new employee\'s last name?'
-      },
-    ])
-    .then((answer) => {
-      connection.query(
-        'INSERT INTO employee SET ?',
+  connection.query('SELECT * FROM role', (err, results) => {
+    if (err) throw err;
+    inquirer
+      .prompt([
         {
-          first_name: answer.newEmpFN,
-          last_name: answer.newEmpLN,
+          name: 'newEmpFN',
+          type: 'input',
+          message: 'What is the new employee\'s first name?'
         },
-        (err) => {
-          if (err) throw err;
-          console.log(`${answer.newEmpFN} ${answer.newEmpLN} added to employee roster as a JOB ROLE! reporting to MANAGER!`);
-          pressAnyKey()
-            .then(() => {
-              startPrgm();
+        {
+          name: 'newEmpLN',
+          type: 'input',
+          message: 'What is the new employee\'s last name?'
+        },
+        {
+          name: 'newEmpRole',
+          type: 'rawlist',
+          choices: () => {
+            const roleArray = [];
+            results.forEach(({ title, id }) => {
+              roleArray.push({ name: title, value: id });
             })
-        }
-      );
-    });
+            return (roleArray);
+          },
+          message: 'What is the new employee\'s job title',
+        },
+      ])
+      .then((answer) => {
+        connection.query(
+          'INSERT INTO employee SET ?',
+          {
+            first_name: answer.newEmpFN,
+            last_name: answer.newEmpLN,
+            role_id: answer.newEmpRole
+          },
+
+          (err) => {
+            if (err) throw err;
+            console.log(`${answer.newEmpFN} ${answer.newEmpLN} added to employee roster
+            !`);
+            pressAnyKey()
+              .then(() => {
+                startPrgm();
+              })
+          }
+        );
+      });
+  })
+
+
 }
 //view dept 
 const viewDept = () => {
@@ -277,53 +234,81 @@ const viewEmployee = () => {
 
 
 // update employeerole
+const updateEmployee = () => {
+  connection.query(
+    'SELECT * FROM employee', (err, results) => {
+      if (err) throw err;
+      inquirer
+        .prompt([
+          {
+            name: 'updateEmp',
+            type: 'rawlist',
+            choices: () => {
+              const empArray = [];
+              results.forEach(({ first_name, last_name, id }) => {
+                empArray.push({ name: `${first_name} ${last_name}`, value: id })
+              })
+              return (empArray);
+            }
+          }
+        ])
+        .then((answers) => {
+          chooseNewRole(answers.updateEmp);
+
+        });
+    })
+}
+
 
 //small functions
-const getDeptIdByName = (deptname) => {
+const chooseNewRole = (employee) => {
   connection.query(
-    `SELECT id FROM department WHERE name=?`,
-    [deptname],
-    (err, results) => {
+    'SELECT * FROM role', (err, results) => {
       if (err) throw err;
-      console.log(results[0].id);
-      console.log(typeof(results[0].id));
-      return results[0].id;
-    }
-  )
-}
+      inquirer
+        .prompt([
+          {
+            name: 'updateRole',
+            type: 'rawlist',
+            choices: () => {
+              const roleArray = [];
+              results.forEach(({ id, title }) => {
+                roleArray.push({ name: title, value: id })
+              })
+              return (roleArray);
+            }
 
+          }
+        ])
+        .then((answers) => {
+          connection.query(
+            'UPDATE employee SET role_id=? WHERE id=?', [answers.updateRole, employee], (err, results) => {
+              if (err) throw err;
+              console.log(`Employee role updated!`)
+              pressAnyKey()
+                .then(() => {
+                  startPrgm();
+                }
+                )
+            })
+        })
+    }
+  )}
 //test functions
 
-const displayDepts = () => {
-  connection.query(
-    'SELECT * FROM department', (err, results) => {
-      const deptArray = [];
-      if (err) throw err;
-      results.forEach(({ name }) => {
-
-        deptArray.push(name);
-
-      });
-      console.log(deptArray);
-    }
-  )
-}
-
-
-
-//exit
-const quitPrgm = () => {
-  console.log('Good Bye');
-  connection.end();
-}
+  //exit
+  const quitPrgm = () => {
+    console.log('Good Bye');
+    connection.end();
+  }
 
 
 
 
-//start listener
-connection.connect((err) => {
-  if (err) throw err;
-  console.log(`connected as id ${connection.threadId}`);
-  // getDeptIdByNam
-  startPrgm();
-})
+  //start listener
+  connection.connect((err) => {
+    if (err) throw err;
+    console.log(`connected as id ${connection.threadId}`);
+    // getDeptIdByNam
+    startPrgm();
+  })
