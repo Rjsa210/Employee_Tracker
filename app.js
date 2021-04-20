@@ -198,7 +198,7 @@ const addEmployee = () => {
 }
 //view dept 
 const viewDept = () => {
-  connection.query('SELECT * FROM department', (err, results) => {
+  connection.query('SELECT name FROM department', (err, results) => {
     if (err) throw err;
     console.table('DEPARTMENTS', results)
     pressAnyKey()
@@ -209,7 +209,7 @@ const viewDept = () => {
 }
 //view roles
 const viewRole = () => {
-  connection.query('SELECT * FROM role', (err, results) => {
+  connection.query('SELECT title FROM role', (err, results) => {
     if (err) throw err;
     console.table('ROLES', results)
     pressAnyKey()
@@ -220,7 +220,7 @@ const viewRole = () => {
 }
 //view employee
 const viewEmployee = () => {
-  connection.query('SELECT * FROM employee', (err, results) => {
+  connection.query(`SELECT CONCAT (first_name, ' ', last_name) AS full_name FROM employee`, (err, results) => {
     if (err) throw err;
     console.table('EMPLOYEES', results)
     pressAnyKey()
@@ -229,9 +229,6 @@ const viewEmployee = () => {
       })
   });
 }
-
-
-
 
 // update employeerole
 const updateEmployee = () => {
@@ -259,6 +256,9 @@ const updateEmployee = () => {
     })
 }
 
+const viewBudget = () => {
+
+}
 
 //small functions
 const chooseNewRole = (employee) => {
@@ -294,7 +294,7 @@ const chooseNewRole = (employee) => {
         })
     }
   )}
-//test functions
+
 
   //exit
   const quitPrgm = () => {
